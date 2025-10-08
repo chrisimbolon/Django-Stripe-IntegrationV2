@@ -1,7 +1,7 @@
 # Virtual Environment
 django-stripe-env/
 venv/
-env/
+vir-env/
 ENV/
 *.venv
 
