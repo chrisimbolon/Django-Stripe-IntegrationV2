@@ -9,3 +9,12 @@ import stripe
 import json
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+def home(request):
+    """Homepage - List of available sessions"""
+    sessions = TherapySession.objects.filter(available = True)
+    context = {
+        'sessions' : sessions,
+        'stripe_public_key': settings.STRIPE_PUBLIC_KEY
+    }
+    return render(request, 'sessions_list.html', context)
