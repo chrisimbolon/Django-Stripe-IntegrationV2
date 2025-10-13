@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book: {{ session.title }} - RockTherapy</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .session-header {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #e94560;
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .session-type {
+            display: inline-block;
+            padding: 8px 20px;
+            background: linear-gradient(45deg, #e94560, #c41e3a);
+            border-radius: 25px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+        
+        .session-header h1 {
+            font-size: 2.5em;
+            color: #fff;
+            margin-bottom: 15px;
+        }
+        
+        .session-header .description {
+            font-size: 1.1em;
+            color: #ccc;
+            line-height: 1.8;
+            margin-bottom: 25px;
+        }
+        
+        .session-info {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+        }
+        
+        .info-item {
+            text-align: center;
+        }
+        
+        .info-label {
+            color: #999;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #4ecca3;
+        }
+        
+        .booking-form {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #e94560;
+            border-radius: 15px;
+            padding: 40px;
+        }
+        
+        .form-title {
+            font-size: 2em;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #e94560;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-weight: bold;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #555;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #e94560;
+            box-shadow: 0 0 15px rgba(233, 69, 96, 0.3);
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        #card-element {
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #555;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        button[type="submit"] {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(45deg, #4ecca3, #2ecc71);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.3s;
+        }
+        
+        button[type="submit"]:hover {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4);
+        }
+        
+        button[type="submit"]:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        #message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+        
+        #message.show {
+            display: block;
+            animation: slideIn 0.5s;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .success {
+            background: rgba(78, 204, 163, 0.2);
+            border: 2px solid #4ecca3;
+            color: #4ecca3;
+        }
+        
+        .error {
+            background: rgba(233, 69, 96, 0.2);
+            border: 2px solid #e94560;
+            color: #e94560;
+        }
+        
+        @media (max-width: 768px) {
+            .session-info {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .session-header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'home' %}" class="back-btn">← Back to Sessions</a>
+        
+        <div class="session-header">
+            <span class="session-type">{{ session.get_therapy_type_display }}</span>
+            <h1>{{ session.title }}</h1>
+            <p class="description">{{ session.description }}</p>
+            
+            <div class="session-info">
+                <div class="info-item">
+                    <div class="info-label">Duration</div>
+                    <div class="info-value">⏱️ {{ session.duration }}m</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Price</div>
+                    <div class="info-value">${{ session.price }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="booking-form">
+            <h2 class="form-title">🎸 Book Your Session</h2>
+            
+            <form id="booking-form">
+                <div class="form-group">
+                    <label for="name">Full Name *</label>
+                    <input type="text" id="name" name="name" required placeholder="John Doe">
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email Address *</label>
+                    <input type="email" id="email" name="email" required placeholder="john@example.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" placeholder="+1 234 567 8900">
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">Additional Notes</label>
+                    <textarea id="notes" name="notes" placeholder="Any specific concerns or questions..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="card-element">Card Details *</label>
+                    <div id="card-element"></div>
+                </div>
+                
+                <button type="submit" id="submit-button">
+                    🎸 Pay ${{ session.price }} & Book Session 🎸
+                </button>
+            </form>
+            
+            <div id="message"></div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Stripe
+        const stripe = Stripe('{{ stripe_public_key }}');
+        const elements = stripe.elements();
+        
+        // Style for card element
+        const style = {
+            base: {
+                color: '#fff',
+                fontSize: '16px',
+                '::placeholder': {
+                    color: '#888',
+                }
+            },
+            invalid: {
+                color: '#e94560',
+            }
+        };
+        
+        const cardElement = elements.create('card', { style: style });
+        cardElement.mount('#card-element');
+
+        const form = document.getElementById('booking-form');
+        const submitButton = document.getElementById('submit-button');
+        const messageDiv = document.getElementById('message');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            submitButton.disabled = true;
+            submitButton.textContent = '🎵 Processing Payment... 🎵';
+            messageDiv.classList.remove('show');
+
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const notes = document.getElementById('notes').value;
+
+            try {
+                // Step 1: Create booking and payment intent
+                const response = await fetch('/create-booking-intent/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        session_id: {{ session.id }},
+                        name: name,
+                        email: email,
+                        phone: phone,
+                        notes: notes
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                const { clientSecret, booking_id } = data;
+
+                // Step 2: Confirm payment with Stripe
+                const { error, paymentIntent } = await stripe.confirmCardPayment(
+                    clientSecret,
+                    {
+                        payment_method: {
+                            card: cardElement,
+                            billing_details: {
+                                name: name,
+                                email: email,
+                                phone: phone
+                            }
+                        }
+                    }
+                );
+
+                if (error) {
+                    messageDiv.textContent = '💥 ' + error.message;
+                    messageDiv.className = 'error show';
+                } else if (paymentIntent.status === 'succeeded') {
+                    // Redirect to success page
+                    window.location.href = `/booking/success/${booking_id}/`;
+                }
+            } catch (err) {
+                messageDiv.textContent = '💥 ' + err.message;
+                messageDiv.className = 'error show';
+            }
+
+            submitButton.disabled = false;
+            submitButton.textContent = '🎸 Pay ${{ session.price }} & Book Session 🎸';
+        });
+    </script>
+</body>
+</html>
